@@ -36,10 +36,40 @@
             top: 50%;
             transform: translateY(-50%);
         }
+
+        /* Splash screen styles */
+        #splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #splash-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Splash screen -->
+    <div id="splash-screen">
+        <video id="splash-video" autoplay muted playsinline>
+            <source src="penalty-shootout-splash.mp4" type="video/mp4" />
+            Tu navegador no soporta el video.
+        </video>
+    </div>
+
+    <!-- Unity container -->
     <div id="unity-container">
         <canvas id="unity-canvas"></canvas>
         <div id="loading-bar">Loading...</div>
@@ -47,34 +77,54 @@
 
     <script>
         const buildUrl = "Build";
-        const loaderUrl = buildUrl + "/v0.4.loader.js";
+        const loaderUrl = buildUrl + "/v0.5.loader.js";
         const config = {
-            dataUrl: buildUrl + "/v0.4.data.unityweb",
-            frameworkUrl: buildUrl + "/v0.4.framework.js.unityweb",
-            codeUrl: buildUrl + "/v0.4.wasm.unityweb",
+            dataUrl: buildUrl + "/v0.5.data.unityweb",
+            frameworkUrl: buildUrl + "/v0.5.framework.js.unityweb",
+            codeUrl: buildUrl + "/v0.5.wasm.unityweb",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "ZimpleGames",
             productName: "penalty-shootout",
-            productVersion: "0.4",
+            productVersion: "0.5",
         };
 
         const canvas = document.querySelector("#unity-canvas");
         const loadingBar = document.querySelector("#loading-bar");
-
         let unityInstance = null;
 
-        const script = document.createElement("script");
-        script.src = loaderUrl;
-        script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => {
-                loadingBar.innerHTML = "Loading... " + Math.floor(progress * 100) + "%";
-            }).then((instance) => {
-                unityInstance = instance;
-                loadingBar.style.display = "none";
-                sendUrlIdToUnity(); // <-- aquí se manda el ID
-            });
+        // Splash screen logic
+        const splashVideo = document.getElementById("splash-video");
+        const splashScreen = document.getElementById("splash-screen");
+
+        splashVideo.onended = () => {
+            splashScreen.style.display = "none";
+            startUnity();
         };
-        document.body.appendChild(script);
+
+        // Optional: allow skipping the splash screen on click or key press
+        // splashVideo.addEventListener("click", skipSplash);
+        // document.addEventListener("keydown", skipSplash);
+
+        function skipSplash() {
+            splashVideo.pause();
+            splashScreen.style.display = "none";
+            startUnity();
+        }
+
+        function startUnity() {
+            const script = document.createElement("script");
+            script.src = loaderUrl;
+            script.onload = () => {
+                createUnityInstance(canvas, config, (progress) => {
+                    loadingBar.innerHTML = "Loading... " + Math.floor(progress * 100) + "%";
+                }).then((instance) => {
+                    unityInstance = instance;
+                    loadingBar.style.display = "none";
+                    sendUrlIdToUnity();
+                });
+            };
+            document.body.appendChild(script);
+        }
 
         function sendUrlIdToUnity() {
             const params = new URLSearchParams(window.location.search);
