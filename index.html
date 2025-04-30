@@ -10,43 +10,81 @@
     <style>
         html,
         body {
-            margin: 40;
+            margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
             background: #000;
-            justify-content: center;
-            align-content: center;
         }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #2e2e2e;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        #unity-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
         }
 
-        h1 {
-            color: #fff;
+        canvas {
+            width: 100%;
+            height: 100%;
         }
 
-        p {
-            color: #fff;
-        }
-
-        .emoji {
-            font-size: 1.2rem;
+        #loading-bar {
+            width: 100%;
+            text-align: center;
+            color: white;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1 class="emoji">⚽️ ¡La primera beta llegó a su fin!</h1>
-        <p>La primer beta del juego ha concluido, por favor mantente atento para poder jugar el juego una vez que este finalizado.</p>
+    <div id="unity-container">
+        <canvas id="unity-canvas"></canvas>
+        <div id="loading-bar">Loading...</div>
     </div>
+
+    <script>
+        const buildUrl = "Build";
+        const loaderUrl = buildUrl + "/v0.4.loader.js";
+        const config = {
+            dataUrl: buildUrl + "/v0.4.data.unityweb",
+            frameworkUrl: buildUrl + "/v0.4.framework.js.unityweb",
+            codeUrl: buildUrl + "/v0.4.wasm.unityweb",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "ZimpleGames",
+            productName: "penalty-shootout",
+            productVersion: "0.4",
+        };
+
+        const canvas = document.querySelector("#unity-canvas");
+        const loadingBar = document.querySelector("#loading-bar");
+
+        let unityInstance = null;
+
+        const script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                loadingBar.innerHTML = "Loading... " + Math.floor(progress * 100) + "%";
+            }).then((instance) => {
+                unityInstance = instance;
+                loadingBar.style.display = "none";
+                sendUrlIdToUnity(); // <-- aquí se manda el ID
+            });
+        };
+        document.body.appendChild(script);
+
+        function sendUrlIdToUnity() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get("id");
+            console.log("ID RECEIVED => " + id);
+            if (id && unityInstance) {
+                // unityInstance.SendMessage("Manager-Api", "RecibirIdDesdeURL", id);
+            }
+        }
+    </script>
 </body>
 
 </html>
